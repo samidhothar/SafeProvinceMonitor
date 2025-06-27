@@ -289,7 +289,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% url 'django.contrib.staticfiles.views.serve' filename='js/charts.js' %}"></script>
+{% load static %}
+<script src="{% static 'js/charts.js' %}"></script>
 <script>
 // Initialize dashboard charts
 document.addEventListener('DOMContentLoaded', function() {

@@ -149,7 +149,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% url 'django.contrib.staticfiles.views.serve' filename='js/map.js' %}"></script>
+{% load static %}
+<script src="{% static 'js/map.js' %}"></script>
 <script>
 // Map data from Django
 const mapData = {{ projects_json|safe }};
