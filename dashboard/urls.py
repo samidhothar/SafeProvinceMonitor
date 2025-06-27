@@ -29,4 +29,6 @@ urlpatterns = [
     path('api/contractors/', views.contractors_list, name='api_contractors'),
     path('api/projects/<int:project_id>/feedback/', views.project_feedback, name='api_project_feedback'),
     path('api/map-data/', views.map_data, name='api_map_data'),
+    path('api/health-check/', views.health_check, name='api_health_check'),
+    path('api/dashboard/recent-activity/', views.recent_activity, name='api_recent_activity'),
 ]

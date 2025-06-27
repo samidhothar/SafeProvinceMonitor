@@ -3,6 +3,7 @@ Views for dashboard app - both API and template views.
 """
 import csv
 from datetime import date, timedelta
+from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
@@ -393,3 +394,72 @@ def map_data(request):
         })
     
     return Response(data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def health_check(request):
+    """Health check endpoint for system monitoring."""
+    try:
+        # Basic database connectivity check
+        Project.objects.count()
+        return Response({
+            'status': 'healthy',
+            'timestamp': timezone.now(),
+            'database': 'connected'
+        })
+    except Exception as e:
+        return Response({
+            'status': 'unhealthy',
+            'timestamp': timezone.now(),
+            'database': 'disconnected',
+            'error': str(e)
+        }, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def recent_activity(request):
+    """Get recent activity for dashboard."""
+    try:
+        # Get recent projects (last 30 days)
+        recent_projects = Project.objects.filter(
+            created_at__gte=timezone.now() - timezone.timedelta(days=30)
+        ).order_by('-created_at')[:10]
+        
+        # Get recent feedback (last 7 days)
+        recent_feedback = Feedback.objects.filter(
+            created_at__gte=timezone.now() - timezone.timedelta(days=7),
+            is_public=True
+        ).order_by('-created_at')[:5]
+        
+        activity_data = {
+            'recent_projects': [
+                {
+                    'id': p.id,
+                    'name': p.name,
+                    'sector': p.sector.name,
+                    'district': p.district.name,
+                    'status': p.status,
+                    'created_at': p.created_at
+                }
+                for p in recent_projects
+            ],
+            'recent_feedback': [
+                {
+                    'id': f.id,
+                    'project_name': f.project.name,
+                    'citizen_name': f.citizen_name,
+                    'rating': f.rating,
+                    'created_at': f.created_at
+                }
+                for f in recent_feedback
+            ]
+        }
+        
+        return Response(activity_data)
+    except Exception as e:
+        return Response({
+            'error': 'Failed to load recent activity',
+            'message': str(e)
+        }, status=500)
