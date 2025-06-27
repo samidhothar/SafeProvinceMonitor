@@ -1,0 +1,504 @@
+{% extends 'base.html' %}
+
+{% block title %}Citizen Feedback - Provincial Reform Portal{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">Feedback</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">Citizen Feedback</h1>
+                    <p class="text-muted">Share your experience and help improve government projects</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+                        <i class="bi bi-plus me-1"></i>Submit Feedback
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-gradient rounded-circle p-3">
+                                <i class="bi bi-chat-square-text text-white fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Total Feedback</div>
+                            <div class="fs-2 fw-bold" id="total-feedback">{{ recent_feedback|length }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-gradient rounded-circle p-3">
+                                <i class="bi bi-star-fill text-white fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Average Rating</div>
+                            <div class="fs-2 fw-bold" id="avg-rating">4.2</div>
+                            <div class="small text-success">
+                                <i class="bi bi-arrow-up me-1"></i>+0.3 this month
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-gradient rounded-circle p-3">
+                                <i class="bi bi-check-circle text-white fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Verified Reviews</div>
+                            <div class="fs-2 fw-bold" id="verified-feedback">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-gradient rounded-circle p-3">
+                                <i class="bi bi-folder-check text-white fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Projects Reviewed</div>
+                            <div class="fs-2 fw-bold" id="projects-with-feedback">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Selection and Feedback -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">Select a Project</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="project-search" 
+                               placeholder="Search projects..." onkeyup="filterProjects()">
+                    </div>
+                    <div class="project-list" style="max-height: 400px; overflow-y: auto;">
+                        {% for project in projects %}
+                        <div class="project-item border rounded p-3 mb-2 cursor-pointer" 
+                             onclick="selectProject({{ project.id }}, '{{ project.name|escapejs }}', '{{ project.sector.name|escapejs }}', '{{ project.district.name|escapejs }}')">
+                            <div class="d-flex align-items-center">
+                                <span class="fs-4 me-2">{{ project.sector.icon }}</span>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold small">{{ project.name|truncatewords:6 }}</div>
+                                    <div class="text-muted small">
+                                        {{ project.sector.name }} • {{ project.district.name }}
+                                    </div>
+                                    <div class="mt-1">
+                                        <div class="progress" style="height: 3px;">
+                                            <div class="progress-bar" style="width: {{ project.progress_percentage }}%; background-color: {{ project.sector.color }};"></div>
+                                        </div>
+                                        <span class="small text-muted">{{ project.progress_percentage }}% complete</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">Recent Feedback</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_feedback %}
+                    <div class="row" id="feedback-container">
+                        {% for feedback in recent_feedback %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-start border-4" style="border-left-color: {{ feedback.project.sector.color }}20 !important;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <div class="fw-bold">{{ feedback.citizen_name }}</div>
+                                            <div class="text-muted small">{{ feedback.created_at|date:"M d, Y" }}</div>
+                                        </div>
+                                        <div class="text-warning">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= feedback.rating %}
+                                                    <i class="bi bi-star-fill"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>{{ feedback.project.name|truncatewords:5 }}</strong>
+                                        <div class="text-muted small">{{ feedback.project.district.name }}</div>
+                                    </div>
+                                    <p class="mb-2 small">{{ feedback.comment|truncatewords:20 }}</p>
+                                    {% if feedback.is_verified %}
+                                    <span class="badge bg-success small">
+                                        <i class="bi bi-check-circle me-1"></i>Verified
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-chat-square-text fs-1 d-block mb-2"></i>
+                        <h5>No feedback yet</h5>
+                        <p>Be the first to share your experience with government projects</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+                            <i class="bi bi-plus me-1"></i>Submit First Feedback
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How to Submit Feedback -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">How to Submit Feedback</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="bg-primary bg-gradient rounded-circle p-3 d-inline-block mb-2">
+                                <i class="bi bi-search text-white fs-2"></i>
+                            </div>
+                            <h6>1. Find a Project</h6>
+                            <p class="text-muted small">Search or browse through government projects in your area or sector of interest.</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="bg-success bg-gradient rounded-circle p-3 d-inline-block mb-2">
+                                <i class="bi bi-star text-white fs-2"></i>
+                            </div>
+                            <h6>2. Rate & Review</h6>
+                            <p class="text-muted small">Provide a rating from 1-5 stars and write your detailed experience or suggestion.</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="bg-info bg-gradient rounded-circle p-3 d-inline-block mb-2">
+                                <i class="bi bi-send text-white fs-2"></i>
+                            </div>
+                            <h6>3. Submit</h6>
+                            <p class="text-muted small">Submit your feedback with your name and optional contact information.</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="bg-warning bg-gradient rounded-circle p-3 d-inline-block mb-2">
+                                <i class="bi bi-check-circle text-white fs-2"></i>
+                            </div>
+                            <h6>4. Get Verified</h6>
+                            <p class="text-muted small">Your feedback may be verified by officials and made public to help others.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="modal fade" id="feedbackModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Submit Project Feedback</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="feedback-form">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Project</label>
+                        <select class="form-select" id="feedback-project" required>
+                            <option value="">Choose a project...</option>
+                            {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.name }} ({{ project.district.name }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Your Name</label>
+                            <input type="text" class="form-control" id="citizen-name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email (Optional)</label>
+                            <input type="email" class="form-control" id="citizen-email">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Phone (Optional)</label>
+                        <input type="tel" class="form-control" id="citizen-phone" placeholder="+92-XXX-XXXXXXX">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Overall Rating</label>
+                        <div class="rating-input d-flex gap-1 mb-2">
+                            <input type="radio" class="btn-check" name="rating" id="rating1" value="1">
+                            <label class="btn btn-outline-warning" for="rating1"><i class="bi bi-star"></i></label>
+                            
+                            <input type="radio" class="btn-check" name="rating" id="rating2" value="2">
+                            <label class="btn btn-outline-warning" for="rating2"><i class="bi bi-star"></i></label>
+                            
+                            <input type="radio" class="btn-check" name="rating" id="rating3" value="3">
+                            <label class="btn btn-outline-warning" for="rating3"><i class="bi bi-star"></i></label>
+                            
+                            <input type="radio" class="btn-check" name="rating" id="rating4" value="4">
+                            <label class="btn btn-outline-warning" for="rating4"><i class="bi bi-star"></i></label>
+                            
+                            <input type="radio" class="btn-check" name="rating" id="rating5" value="5">
+                            <label class="btn btn-outline-warning" for="rating5"><i class="bi bi-star"></i></label>
+                        </div>
+                        <div class="small text-muted">
+                            <span id="rating-text">Please select a rating</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Your Feedback</label>
+                        <textarea class="form-control" id="feedback-comment" rows="4" 
+                                  placeholder="Share your experience, suggestions, or concerns about this project..." required></textarea>
+                        <div class="form-text">Be specific and constructive. Your feedback helps improve government services.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="feedback-public" checked>
+                            <label class="form-check-label" for="feedback-public">
+                                Make my feedback public to help other citizens
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i>Submit Feedback
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Project selection and filtering
+function selectProject(id, name, sector, district) {
+    document.getElementById('feedback-project').value = id;
+    
+    // Show modal if not already open
+    const modal = bootstrap.Modal.getInstance(document.getElementById('feedbackModal'));
+    if (!modal) {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('feedbackModal')).show();
+    }
+    
+    // Highlight selected project
+    document.querySelectorAll('.project-item').forEach(item => {
+        item.classList.remove('border-primary', 'bg-light');
+    });
+    event.target.closest('.project-item').classList.add('border-primary', 'bg-light');
+}
+
+function filterProjects() {
+    const searchTerm = document.getElementById('project-search').value.toLowerCase();
+    const projectItems = document.querySelectorAll('.project-item');
+    
+    projectItems.forEach(item => {
+        const projectText = item.textContent.toLowerCase();
+        if (projectText.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Rating interaction
+document.querySelectorAll('input[name="rating"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const ratingTexts = {
+            '1': 'Very Poor - Major issues',
+            '2': 'Poor - Needs improvement',
+            '3': 'Average - Acceptable',
+            '4': 'Good - Satisfied',
+            '5': 'Excellent - Highly satisfied'
+        };
+        
+        document.getElementById('rating-text').textContent = ratingTexts[this.value];
+        
+        // Update star button styles
+        document.querySelectorAll('.rating-input label').forEach((label, index) => {
+            if (index < parseInt(this.value)) {
+                label.classList.remove('btn-outline-warning');
+                label.classList.add('btn-warning');
+                label.innerHTML = '<i class="bi bi-star-fill"></i>';
+            } else {
+                label.classList.remove('btn-warning');
+                label.classList.add('btn-outline-warning');
+                label.innerHTML = '<i class="bi bi-star"></i>';
+            }
+        });
+    });
+});
+
+// Feedback form submission
+document.getElementById('feedback-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const rating = document.querySelector('input[name="rating"]:checked');
+    if (!rating) {
+        alert('Please select a rating');
+        return;
+    }
+    
+    const formData = {
+        project: document.getElementById('feedback-project').value,
+        citizen_name: document.getElementById('citizen-name').value,
+        citizen_email: document.getElementById('citizen-email').value,
+        citizen_phone: document.getElementById('citizen-phone').value,
+        rating: rating.value,
+        comment: document.getElementById('feedback-comment').value
+    };
+    
+    // Show loading state
+    const submitBtn = document.querySelector('#feedback-form button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Submitting...';
+    submitBtn.disabled = true;
+    
+    fetch('/api/feedback/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.id) {
+            // Success
+            bootstrap.Modal.getInstance(document.getElementById('feedbackModal')).hide();
+            
+            // Show success message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="bi bi-check-circle me-2"></i>
+                Thank you! Your feedback has been submitted successfully.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.container-fluid').firstChild);
+            
+            // Reset form
+            document.getElementById('feedback-form').reset();
+            document.getElementById('rating-text').textContent = 'Please select a rating';
+            document.querySelectorAll('.rating-input label').forEach(label => {
+                label.classList.remove('btn-warning');
+                label.classList.add('btn-outline-warning');
+                label.innerHTML = '<i class="bi bi-star"></i>';
+            });
+            
+            // Refresh page after 2 seconds to show new feedback
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            throw new Error('Submission failed');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error submitting feedback. Please try again.');
+    })
+    .finally(() => {
+        // Restore button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+});
+
+// Load feedback statistics on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadFeedbackStats();
+});
+
+function loadFeedbackStats() {
+    // This would typically load from an API endpoint
+    // For now, calculate from existing data
+    const feedbackCards = document.querySelectorAll('#feedback-container .card');
+    let totalRating = 0;
+    let verifiedCount = 0;
+    const projectsWithFeedback = new Set();
+    
+    feedbackCards.forEach(card => {
+        const stars = card.querySelectorAll('.bi-star-fill').length;
+        totalRating += stars;
+        
+        if (card.querySelector('.badge.bg-success')) {
+            verifiedCount++;
+        }
+        
+        const projectName = card.querySelector('strong').textContent;
+        projectsWithFeedback.add(projectName);
+    });
+    
+    if (feedbackCards.length > 0) {
+        const avgRating = (totalRating / feedbackCards.length).toFixed(1);
+        document.getElementById('avg-rating').textContent = avgRating;
+    }
+    
+    document.getElementById('verified-feedback').textContent = verifiedCount;
+    document.getElementById('projects-with-feedback').textContent = projectsWithFeedback.size;
+}
+</script>
+{% endblock %}

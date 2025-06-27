@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}Project Map - Provincial Reform Portal{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">Map</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">Interactive Project Map</h1>
+                    <p class="text-muted">Geographical view of all provincial reform projects</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="resetMapView()">
+                        <i class="bi bi-geo-alt me-1"></i>Reset View
+                    </button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filtersModal">
+                        <i class="bi bi-funnel me-1"></i>Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Controls -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-2">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge bg-success d-flex align-items-center">
+                                    <span class="status-indicator bg-success me-2"></span>Complete
+                                </span>
+                                <span class="badge bg-primary d-flex align-items-center">
+                                    <span class="status-indicator bg-primary me-2"></span>On Track
+                                </span>
+                                <span class="badge bg-warning d-flex align-items-center">
+                                    <span class="status-indicator bg-warning me-2"></span>At Risk
+                                </span>
+                                <span class="badge bg-danger d-flex align-items-center">
+                                    <span class="status-indicator bg-danger me-2"></span>Delayed
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <span class="text-muted small">
+                                <span id="visible-projects-count">0</span> projects visible
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Container -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <div id="map" style="height: 70vh; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Details Panel -->
+    <div class="row mt-4" id="project-details-panel" style="display: none;">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0" id="selected-project-title">Project Details</h5>
+                        <button class="btn-close" onclick="closeProjectDetails()"></button>
+                    </div>
+                </div>
+                <div class="card-body" id="project-details-content">
+                    <!-- Project details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Modal -->
+<div class="modal fade" id="filtersModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Filter Projects</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Sector</label>
+                    <select class="form-select" id="sector-filter">
+                        <option value="">All Sectors</option>
+                        {% for sector in sectors %}
+                        <option value="{{ sector.id }}">{{ sector.icon }} {{ sector.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">District</label>
+                    <select class="form-select" id="district-filter">
+                        <option value="">All Districts</option>
+                        {% for district in districts %}
+                        <option value="{{ district.id }}">{{ district.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="COMPLETE">Complete</option>
+                        <option value="ON_TRACK">On Track</option>
+                        <option value="AT_RISK">At Risk</option>
+                        <option value="DELAYED">Delayed</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Progress Range</label>
+                    <div class="row">
+                        <div class="col-6">
+                            <input type="number" class="form-control" id="progress-min" placeholder="Min %" min="0" max="100">
+                        </div>
+                        <div class="col-6">
+                            <input type="number" class="form-control" id="progress-max" placeholder="Max %" min="0" max="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="clearFilters()">Clear All</button>
+                <button type="button" class="btn btn-primary" onclick="applyFilters()" data-bs-dismiss="modal">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% url 'django.contrib.staticfiles.views.serve' filename='js/map.js' %}"></script>
+<script>
+// Map data from Django
+const mapData = {{ projects_json|safe }};
+
+// Initialize map when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMap(mapData);
+});
+</script>
+{% endblock %}

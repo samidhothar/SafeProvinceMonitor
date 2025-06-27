@@ -1,0 +1,550 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.name }} - Provincial Reform Portal{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard:map' %}">Projects</a></li>
+<li class="breadcrumb-item active">{{ project.name|truncatewords:5 }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Project Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="fs-2 me-3">{{ project.sector.icon }}</span>
+                                <div>
+                                    <h1 class="h3 mb-1">{{ project.name }}</h1>
+                                    <div class="d-flex gap-2 mb-2">
+                                        <span class="badge" style="background-color: {{ project.sector.color }}20; color: {{ project.sector.color }};">
+                                            {{ project.sector.name }}
+                                        </span>
+                                        <span class="badge bg-light text-dark">
+                                            <i class="bi bi-geo-alt me-1"></i>{{ project.district.name }}
+                                        </span>
+                                        {% if project.status == 'COMPLETE' %}
+                                            <span class="badge bg-success">Complete</span>
+                                        {% elif project.status == 'DELAYED' %}
+                                            <span class="badge bg-danger">Delayed</span>
+                                        {% elif project.status == 'AT_RISK' %}
+                                            <span class="badge bg-warning">At Risk</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">On Track</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-muted mb-0">{{ project.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="d-flex flex-md-column gap-2">
+                                {% if can_edit %}
+                                <a href="#" class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil me-1"></i>Edit Project
+                                </a>
+                                {% endif %}
+                                <button class="btn btn-outline-secondary" onclick="shareProject()">
+                                    <i class="bi bi-share me-1"></i>Share
+                                </button>
+                                <button class="btn btn-outline-info" onclick="exportProject()">
+                                    <i class="bi bi-download me-1"></i>Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-2">
+                        <div class="progress mx-auto" style="width: 80px; height: 80px;">
+                            <div class="progress-bar rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: {{ project.progress_percentage }}%; height: 80px; background: conic-gradient(#0d6efd {{ project.progress_percentage }}%, #e9ecef 0);">
+                                <span class="fw-bold">{{ project.progress_percentage }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h6 class="mb-0">Progress</h6>
+                    <small class="text-muted">Overall Completion</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-2">
+                        <i class="bi bi-currency-dollar fs-1 text-success"></i>
+                    </div>
+                    <h6 class="mb-1">PKR {{ project.budget_allocated|floatformat:1 }}B</h6>
+                    <small class="text-muted">Allocated</small>
+                    <div class="mt-2">
+                        <div class="small text-success">
+                            {{ project.budget_utilization_percentage }}% utilized
+                        </div>
+                        <div class="progress mt-1" style="height: 4px;">
+                            <div class="progress-bar bg-success" style="width: {{ project.budget_utilization_percentage }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-2">
+                        <i class="bi bi-target fs-1 text-primary"></i>
+                    </div>
+                    <h6 class="mb-1">{{ project.kpi_achieved|floatformat:0 }}/{{ project.kpi_target|floatformat:0 }}</h6>
+                    <small class="text-muted">{{ project.kpi_unit }}</small>
+                    <div class="mt-2">
+                        <div class="small text-primary">
+                            {{ project.kpi_achievement_percentage }}% achieved
+                        </div>
+                        <div class="progress mt-1" style="height: 4px;">
+                            <div class="progress-bar" style="width: {{ project.kpi_achievement_percentage }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-2">
+                        <i class="bi bi-calendar-event fs-1 text-warning"></i>
+                    </div>
+                    <h6 class="mb-1">{{ project.days_remaining }}</h6>
+                    <small class="text-muted">Days Remaining</small>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            Ends: {{ project.end_date_planned|date:"M d, Y" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline and KPI Charts -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">Project Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline-container">
+                        <div class="timeline-header d-flex justify-content-between text-muted small mb-3">
+                            <span>{{ project.start_date|date:"M Y" }}</span>
+                            <span>{{ project.end_date_planned|date:"M Y" }}</span>
+                        </div>
+                        
+                        <div class="timeline-bar position-relative bg-light rounded" style="height: 20px;">
+                            <div class="timeline-progress bg-primary rounded" 
+                                 style="width: {{ project.progress_percentage }}%; height: 100%;"></div>
+                            
+                            <!-- Timeline markers -->
+                            <div class="timeline-marker" style="left: 0%;" title="Project Start">
+                                <i class="bi bi-play-circle text-success"></i>
+                            </div>
+                            
+                            <div class="timeline-marker" style="left: {{ project.progress_percentage }}%;" title="Current Progress">
+                                <i class="bi bi-circle-fill text-primary"></i>
+                            </div>
+                            
+                            {% if project.status == 'COMPLETE' %}
+                            <div class="timeline-marker" style="left: 100%;" title="Project Complete">
+                                <i class="bi bi-check-circle text-success"></i>
+                            </div>
+                            {% else %}
+                            <div class="timeline-marker" style="left: 100%;" title="Planned End">
+                                <i class="bi bi-flag text-muted"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="timeline-info mt-3">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="small text-muted">Started</div>
+                                    <div class="fw-bold">{{ project.start_date|date:"M d, Y" }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="small text-muted">Progress</div>
+                                    <div class="fw-bold text-primary">{{ project.progress_percentage }}%</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="small text-muted">Target End</div>
+                                    <div class="fw-bold">{{ project.end_date_planned|date:"M d, Y" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">KPI Trend</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="kpi-chart" width="300" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Details and Info -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">Project Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">Basic Details</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted">Sector:</td>
+                                    <td>{{ project.sector.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">District:</td>
+                                    <td>{{ project.district.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Contractor:</td>
+                                    <td>{{ project.contractor.name|default:"Not assigned" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Status:</td>
+                                    <td>
+                                        {% if project.status == 'COMPLETE' %}
+                                            <span class="badge bg-success">Complete</span>
+                                        {% elif project.status == 'DELAYED' %}
+                                            <span class="badge bg-danger">Delayed</span>
+                                        {% elif project.status == 'AT_RISK' %}
+                                            <span class="badge bg-warning">At Risk</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">On Track</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">Financial Details</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted">Budget Allocated:</td>
+                                    <td class="fw-bold">PKR {{ project.budget_allocated|floatformat:1 }}B</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Budget Spent:</td>
+                                    <td>PKR {{ project.budget_spent|floatformat:1 }}B</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Utilization:</td>
+                                    <td>
+                                        <span class="{% if project.budget_utilization_percentage > 100 %}text-danger{% elif project.budget_utilization_percentage > 80 %}text-warning{% else %}text-success{% endif %}">
+                                            {{ project.budget_utilization_percentage }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Last Updated:</td>
+                                    <td>{{ project.last_updated|date:"M d, Y H:i" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">Location</h5>
+                </div>
+                <div class="card-body">
+                    {% if project.latitude and project.longitude %}
+                    <div id="project-map" style="height: 250px; width: 100%;"></div>
+                    <div class="mt-2 text-center">
+                        <small class="text-muted">
+                            Coordinates: {{ project.latitude|floatformat:4 }}, {{ project.longitude|floatformat:4 }}
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-geo-alt fs-1 d-block mb-2"></i>
+                        Location data not available
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            Citizen Feedback
+                            <span class="badge bg-primary ms-2">{{ feedback|length }}</span>
+                        </h5>
+                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+                            <i class="bi bi-plus me-1"></i>Add Feedback
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if feedback %}
+                    <div class="row">
+                        {% for fb in feedback %}
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <div class="fw-bold">{{ fb.citizen_name }}</div>
+                                        <div class="text-muted small">{{ fb.created_at|date:"M d, Y" }}</div>
+                                    </div>
+                                    <div class="text-warning">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= fb.rating %}
+                                                <i class="bi bi-star-fill"></i>
+                                            {% else %}
+                                                <i class="bi bi-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <p class="mb-0">{{ fb.comment }}</p>
+                                {% if fb.is_verified %}
+                                <div class="mt-2">
+                                    <span class="badge bg-success small">
+                                        <i class="bi bi-check-circle me-1"></i>Verified
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-chat-square-text fs-1 d-block mb-2"></i>
+                        No feedback available
+                        <div class="mt-2">
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+                                Be the first to provide feedback
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="modal fade" id="feedbackModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Submit Feedback</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="feedback-form">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Your Name</label>
+                        <input type="text" class="form-control" id="citizen-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email (Optional)</label>
+                        <input type="email" class="form-control" id="citizen-email">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <div class="rating-input d-flex gap-1">
+                            <input type="radio" class="btn-check" name="rating" id="rating1" value="1">
+                            <label class="btn btn-outline-warning" for="rating1"><i class="bi bi-star"></i></label>
+                            
+                            <input type="radio" class="btn-check" name="rating" id="rating2" value="2">
+                            <label class="btn btn-outline-warning" for="rating2"><i class="bi bi-star"></i></label>
+                            
+                            <input type="radio" class="btn-check" name="rating" id="rating3" value="3">
+                            <label class="btn btn-outline-warning" for="rating3"><i class="bi bi-star"></i></label>
+                            
+                            <input type="radio" class="btn-check" name="rating" id="rating4" value="4">
+                            <label class="btn btn-outline-warning" for="rating4"><i class="bi bi-star"></i></label>
+                            
+                            <input type="radio" class="btn-check" name="rating" id="rating5" value="5">
+                            <label class="btn btn-outline-warning" for="rating5"><i class="bi bi-star"></i></label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Comment</label>
+                        <textarea class="form-control" id="feedback-comment" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% url 'django.contrib.staticfiles.views.serve' filename='js/charts.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize KPI chart
+    const kpiData = [
+        {% for kpi in kpi_history %}
+        {
+            date: '{{ kpi.date|date:"M Y" }}',
+            value: {{ kpi.kpi_achieved|floatformat:1 }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    if (kpiData.length > 0) {
+        const ctx = document.getElementById('kpi-chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: kpiData.map(d => d.date),
+                datasets: [{
+                    label: 'KPI Achievement',
+                    data: kpiData.map(d => d.value),
+                    borderColor: '#0d6efd',
+                    backgroundColor: '#0d6efd20',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: {{ project.kpi_target|floatformat:0 }}
+                    }
+                }
+            }
+        });
+    }
+    
+    // Initialize project location map
+    {% if project.latitude and project.longitude %}
+    const projectMap = L.map('project-map').setView([{{ project.latitude }}, {{ project.longitude }}], 13);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(projectMap);
+    
+    const marker = L.marker([{{ project.latitude }}, {{ project.longitude }}]).addTo(projectMap);
+    marker.bindPopup(`
+        <div class="text-center">
+            <strong>{{ project.name }}</strong><br>
+            <small class="text-muted">{{ project.district.name }}</small>
+        </div>
+    `).openPopup();
+    {% endif %}
+});
+
+// Feedback form submission
+document.getElementById('feedback-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        project: {{ project.id }},
+        citizen_name: document.getElementById('citizen-name').value,
+        citizen_email: document.getElementById('citizen-email').value,
+        rating: document.querySelector('input[name="rating"]:checked')?.value,
+        comment: document.getElementById('feedback-comment').value
+    };
+    
+    if (!formData.rating) {
+        alert('Please select a rating');
+        return;
+    }
+    
+    fetch('/api/feedback/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.id) {
+            alert('Feedback submitted successfully!');
+            location.reload();
+        } else {
+            alert('Error submitting feedback. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error submitting feedback. Please try again.');
+    });
+});
+
+// Utility functions
+function shareProject() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ project.name }}',
+            text: '{{ project.description|truncatewords:20 }}',
+            url: window.location.href
+        });
+    } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Project URL copied to clipboard!');
+        });
+    }
+}
+
+function exportProject() {
+    // This would typically generate a PDF or other export format
+    window.print();
+}
+</script>
+{% endblock %}

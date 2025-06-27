@@ -1,0 +1,14 @@
+[project]
+name = "repl-nix-workspace"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "dj-database-url>=3.0.0",
+    "django-cors-headers>=4.7.0",
+    "django-filter>=25.1",
+    "django==4.2",
+    "djangorestframework>=3.16.0",
+    "pillow>=11.2.1",
+    "psycopg2-binary>=2.9.10",
+]

@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Provincial Reform Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">Reform Dashboard</h1>
+                    <p class="text-muted">Real-time monitoring of provincial reform projects</p>
+                </div>
+                <div>
+                    <span class="badge bg-success fs-6">
+                        <i class="bi bi-check-circle me-1"></i>System Active
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-gradient rounded-circle p-3">
+                                <i class="bi bi-folder-check text-white fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Total Projects</div>
+                            <div class="fs-2 fw-bold" id="total-projects">{{ stats.total_projects }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-gradient rounded-circle p-3">
+                                <i class="bi bi-check-circle text-white fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Completed</div>
+                            <div class="fs-2 fw-bold text-success" id="completed-projects">{{ stats.completed_projects }}</div>
+                            <div class="small text-success">
+                                <i class="bi bi-arrow-up me-1"></i>{{ stats.completion_percentage }}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-gradient rounded-circle p-3">
+                                <i class="bi bi-exclamation-triangle text-white fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">At Risk</div>
+                            <div class="fs-2 fw-bold text-warning" id="at-risk-projects">{{ stats.at_risk_projects }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-danger bg-gradient rounded-circle p-3">
+                                <i class="bi bi-x-circle text-white fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Delayed</div>
+                            <div class="fs-2 fw-bold text-danger" id="delayed-projects">{{ stats.delayed_projects }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Overview -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="card-title mb-0">Budget Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Total Allocated</span>
+                                    <span class="fw-bold">PKR {{ stats.total_budget_allocated|floatformat:0 }} Bn</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" style="width: 100%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Total Spent</span>
+                                    <span class="fw-bold">PKR {{ stats.total_budget_spent|floatformat:0 }} Bn</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" style="width: {% widthratio stats.total_budget_spent stats.total_budget_allocated 100 %}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="budget-chart" width="200" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="card-title mb-0">Average Progress</h5>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <div class="text-center">
+                        <div class="position-relative d-inline-block">
+                            <canvas id="progress-chart" width="150" height="150"></canvas>
+                            <div class="position-absolute top-50 start-50 translate-middle">
+                                <div class="fs-3 fw-bold">{{ stats.average_progress|floatformat:1 }}%</div>
+                                <div class="text-muted small">Complete</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sectors Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Sectors Overview</h5>
+                        <a href="{% url 'dashboard:map' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-geo-alt me-1"></i>View on Map
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for sector in sectors %}
+                        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <div class="border rounded p-3 h-100 sector-card" style="border-color: {{ sector.color }}20 !important;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="fs-3 me-2">{{ sector.icon }}</span>
+                                    <div>
+                                        <div class="fw-bold small">{{ sector.name }}</div>
+                                        <div class="text-muted small">{{ sector.project_count }} projects</div>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <div class="small text-muted mb-1">Budget: PKR {{ sector.total_budget|floatformat:1 }}B</div>
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar" style="width: {% if sector.total_budget %}{% widthratio sector.total_spent sector.total_budget 100 %}{% else %}0{% endif %}%; background-color: {{ sector.color }};"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Projects -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Recent Projects</h5>
+                        <a href="#" class="btn btn-outline-primary btn-sm" onclick="loadAllProjects()">
+                            <i class="bi bi-list me-1"></i>View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Project</th>
+                                    <th>Sector</th>
+                                    <th>District</th>
+                                    <th>Status</th>
+                                    <th>Progress</th>
+                                    <th>Budget</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for project in recent_projects %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ project.name }}</div>
+                                        <div class="text-muted small">{{ project.description|truncatewords:10 }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: {{ project.sector.color }}20; color: {{ project.sector.color }};">
+                                            {{ project.sector.icon }} {{ project.sector.name }}
+                                        </span>
+                                    </td>
+                                    <td>{{ project.district.name }}</td>
+                                    <td>
+                                        {% if project.status == 'COMPLETE' %}
+                                            <span class="badge bg-success">Complete</span>
+                                        {% elif project.status == 'DELAYED' %}
+                                            <span class="badge bg-danger">Delayed</span>
+                                        {% elif project.status == 'AT_RISK' %}
+                                            <span class="badge bg-warning">At Risk</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">On Track</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                                <div class="progress-bar 
+                                                    {% if project.progress_percentage >= 80 %}bg-success
+                                                    {% elif project.progress_percentage >= 50 %}bg-warning
+                                                    {% else %}bg-danger{% endif %}" 
+                                                    style="width: {{ project.progress_percentage }}%">
+                                                </div>
+                                            </div>
+                                            <span class="small">{{ project.progress_percentage }}%</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="small">
+                                            <div>PKR {{ project.budget_allocated|floatformat:1 }}B</div>
+                                            <div class="text-muted">{{ project.budget_utilization_percentage }}% used</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'dashboard:project_detail' project.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                        No projects found
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% url 'django.contrib.staticfiles.views.serve' filename='js/charts.js' %}"></script>
+<script>
+// Initialize dashboard charts
+document.addEventListener('DOMContentLoaded', function() {
+    // Budget Chart
+    const budgetCtx = document.getElementById('budget-chart').getContext('2d');
+    const budgetAllocated = {{ stats.total_budget_allocated|default:0 }};
+    const budgetSpent = {{ stats.total_budget_spent|default:0 }};
+    
+    new Chart(budgetCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Spent', 'Remaining'],
+            datasets: [{
+                data: [budgetSpent, budgetAllocated - budgetSpent],
+                backgroundColor: ['#198754', '#e9ecef'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+
+    // Progress Chart
+    const progressCtx = document.getElementById('progress-chart').getContext('2d');
+    const avgProgress = {{ stats.average_progress|default:0 }};
+    
+    new Chart(progressCtx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [avgProgress, 100 - avgProgress],
+                backgroundColor: ['#0d6efd', '#e9ecef'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+});
+
+// Load all projects function
+function loadAllProjects() {
+    // This would typically open a modal or navigate to a projects page
+    window.location.href = '/api/projects/';
+}
+
+// Auto-refresh dashboard stats every 30 seconds
+setInterval(function() {
+    fetch('/api/dashboard/stats/')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('total-projects').textContent = data.total_projects;
+            document.getElementById('completed-projects').textContent = data.completed_projects;
+            document.getElementById('at-risk-projects').textContent = data.at_risk_projects;
+            document.getElementById('delayed-projects').textContent = data.delayed_projects;
+        })
+        .catch(error => console.log('Error refreshing stats:', error));
+}, 30000);
+</script>
+{% endblock %}

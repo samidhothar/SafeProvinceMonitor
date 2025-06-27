@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Provincial Reform Portal</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        .login-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .login-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .brand-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+        
+        .form-floating > .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+            border: none;
+            font-weight: 600;
+            padding: 12px 24px;
+        }
+        
+        .btn-login:hover {
+            background: linear-gradient(135deg, #0a58ca, #084298);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+        }
+        
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+        }
+        
+        .stats-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container d-flex align-items-center">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="row g-0">
+                        <!-- Left Side - Login Form -->
+                        <div class="col-lg-6">
+                            <div class="card login-card h-100">
+                                <div class="card-body p-5">
+                                    <div class="text-center mb-4">
+                                        <div class="brand-logo">
+                                            <i class="bi bi-shield-check text-white fs-1"></i>
+                                        </div>
+                                        <h2 class="fw-bold mb-1">Welcome Back</h2>
+                                        <p class="text-muted">Sign in to Provincial Reform Portal</p>
+                                    </div>
+
+                                    <!-- Messages -->
+                                    {% if messages %}
+                                        {% for message in messages %}
+                                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                            {{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
+
+                                    <!-- Login Form -->
+                                    <form method="post" id="login-form">
+                                        {% csrf_token %}
+                                        
+                                        <div class="form-floating mb-3">
+                                            <input type="text" class="form-control" id="id_username" 
+                                                   name="username" placeholder="Username" required 
+                                                   value="{{ form.username.value|default:'' }}">
+                                            <label for="id_username">
+                                                <i class="bi bi-person me-2"></i>Username
+                                            </label>
+                                            {% if form.username.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.username.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="form-floating mb-3">
+                                            <input type="password" class="form-control" id="id_password" 
+                                                   name="password" placeholder="Password" required>
+                                            <label for="id_password">
+                                                <i class="bi bi-lock me-2"></i>Password
+                                            </label>
+                                            <div class="form-text">
+                                                <a href="#" class="text-decoration-none">Forgot password?</a>
+                                            </div>
+                                            {% if form.password.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.password.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="remember-me">
+                                                <label class="form-check-label" for="remember-me">
+                                                    Remember me
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {% if form.non_field_errors %}
+                                            <div class="alert alert-danger">
+                                                {{ form.non_field_errors.0 }}
+                                            </div>
+                                        {% endif %}
+
+                                        <button type="submit" class="btn btn-login text-white w-100 mb-3">
+                                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                                        </button>
+                                    </form>
+
+                                    <!-- Demo Credentials -->
+                                    <div class="card bg-light">
+                                        <div class="card-body py-3">
+                                            <h6 class="card-title mb-2">
+                                                <i class="bi bi-info-circle me-2"></i>Demo Credentials
+                                            </h6>
+                                            <div class="row small">
+                                                <div class="col-6">
+                                                    <strong>Admin:</strong><br>
+                                                    Username: admin<br>
+                                                    Password: password123
+                                                </div>
+                                                <div class="col-6">
+                                                    <strong>Dept Head:</strong><br>
+                                                    Username: health_dept<br>
+                                                    Password: password123
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-center mt-4">
+                                        <p class="text-muted mb-1">New to the portal?</p>
+                                        <a href="#" class="text-decoration-none fw-semibold">Request access</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Side - Portal Information -->
+                        <div class="col-lg-6 d-flex align-items-center">
+                            <div class="p-5 text-white">
+                                <div class="mb-5">
+                                    <h1 class="fw-bold mb-3">Saaf | Sasta | Safe</h1>
+                                    <h4 class="mb-3">Provincial Reform Monitoring Portal</h4>
+                                    <p class="lead mb-4">
+                                        Transparent governance through technology. Monitor government projects, 
+                                        track progress, and ensure accountability in real-time.
+                                    </p>
+                                </div>
+
+                                <!-- Features -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="feature-icon">
+                                            <i class="bi bi-bar-chart text-white"></i>
+                                        </div>
+                                        <h6 class="fw-bold">Real-time Analytics</h6>
+                                        <p class="small">Track project progress and budget utilization with live dashboards</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="feature-icon">
+                                            <i class="bi bi-geo-alt text-white"></i>
+                                        </div>
+                                        <h6 class="fw-bold">Interactive Maps</h6>
+                                        <p class="small">Visualize projects geographically with status indicators</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="feature-icon">
+                                            <i class="bi bi-people text-white"></i>
+                                        </div>
+                                        <h6 class="fw-bold">Citizen Feedback</h6>
+                                        <p class="small">Enable public participation and transparency</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="feature-icon">
+                                            <i class="bi bi-shield-check text-white"></i>
+                                        </div>
+                                        <h6 class="fw-bold">Secure Access</h6>
+                                        <p class="small">Role-based permissions and data security</p>
+                                    </div>
+                                </div>
+
+                                <!-- Live Stats -->
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <div class="stats-card rounded p-3 text-center">
+                                            <h3 class="fw-bold mb-1" id="live-projects">Loading...</h3>
+                                            <small>Active Projects</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="stats-card rounded p-3 text-center">
+                                            <h3 class="fw-bold mb-1" id="live-budget">Loading...</h3>
+                                            <small>Total Budget</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="stats-card rounded p-3 text-center">
+                                            <h3 class="fw-bold mb-1" id="live-completion">Loading...</h3>
+                                            <small>Avg. Progress</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load live statistics
+            loadLiveStats();
+            
+            // Demo credential quick fill
+            addDemoCredentialButtons();
+            
+            // Form enhancements
+            enhanceForm();
+        });
+
+        function loadLiveStats() {
+            fetch('/api/dashboard/stats/')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('live-projects').textContent = data.total_projects || 0;
+                    document.getElementById('live-budget').textContent = `PKR ${(data.total_budget_allocated / 1000000000).toFixed(1)}B` || 'N/A';
+                    document.getElementById('live-completion').textContent = `${data.average_progress?.toFixed(1) || 0}%`;
+                })
+                .catch(error => {
+                    console.log('Error loading stats:', error);
+                    document.getElementById('live-projects').textContent = 'N/A';
+                    document.getElementById('live-budget').textContent = 'N/A';
+                    document.getElementById('live-completion').textContent = 'N/A';
+                });
+        }
+
+        function addDemoCredentialButtons() {
+            // Add quick fill buttons for demo credentials
+            const demoCard = document.querySelector('.card.bg-light .card-body');
+            
+            const adminBtn = document.createElement('button');
+            adminBtn.type = 'button';
+            adminBtn.className = 'btn btn-outline-primary btn-sm me-2 mt-2';
+            adminBtn.innerHTML = '<i class="bi bi-arrow-right me-1"></i>Use Admin';
+            adminBtn.onclick = () => fillCredentials('admin', 'password123');
+            
+            const deptBtn = document.createElement('button');
+            deptBtn.type = 'button';
+            deptBtn.className = 'btn btn-outline-success btn-sm mt-2';
+            deptBtn.innerHTML = '<i class="bi bi-arrow-right me-1"></i>Use Dept Head';
+            deptBtn.onclick = () => fillCredentials('health_dept', 'password123');
+            
+            demoCard.appendChild(adminBtn);
+            demoCard.appendChild(deptBtn);
+        }
+
+        function fillCredentials(username, password) {
+            document.getElementById('id_username').value = username;
+            document.getElementById('id_password').value = password;
+            
+            // Add visual feedback
+            const usernameField = document.getElementById('id_username');
+            const passwordField = document.getElementById('id_password');
+            
+            usernameField.classList.add('border-success');
+            passwordField.classList.add('border-success');
+            
+            setTimeout(() => {
+                usernameField.classList.remove('border-success');
+                passwordField.classList.remove('border-success');
+            }, 1000);
+        }
+
+        function enhanceForm() {
+            const form = document.getElementById('login-form');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            
+            form.addEventListener('submit', function(e) {
+                // Show loading state
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Signing In...';
+                submitBtn.disabled = true;
+                
+                // Re-enable button after a delay (in case of validation errors)
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }, 3000);
+            });
+            
+            // Add Enter key support for password field
+            document.getElementById('id_password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    form.submit();
+                }
+            });
+            
+            // Add focus enhancement
+            const inputs = form.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.02)';
+                    this.parentElement.style.transition = 'transform 0.2s ease';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                });
+            });
+        }
+
+        // Add some animation on page load
+        window.addEventListener('load', function() {
+            const loginCard = document.querySelector('.login-card');
+            loginCard.style.opacity = '0';
+            loginCard.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                loginCard.style.transition = 'all 0.6s ease';
+                loginCard.style.opacity = '1';
+                loginCard.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
