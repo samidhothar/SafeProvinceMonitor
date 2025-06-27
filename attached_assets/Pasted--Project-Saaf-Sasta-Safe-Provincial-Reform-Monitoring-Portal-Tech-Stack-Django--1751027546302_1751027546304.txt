@@ -1,0 +1,90 @@
+# 📌 Project: “Saaf | Sasta | Safe” Provincial Reform Monitoring Portal  
+# 🛠  Tech Stack: Django 4 + Django REST Framework, PostgreSQL (use SQLite for the dummy build), Tailwind-CSS (optional).  
+# 👤 User Roles: Admin, Department Head, District Officer, Public.  
+# --------------------------------------------------------------
+# 1⃣  Core Requirements
+# --------------------------------------------------------------
+# • Build a Django project called reform_portal with two apps:
+#     └── dashboard  – REST + HTML views for KPIs, timelines, maps  
+#     └── accounts   – simple username/password auth + role flags  
+# • Provide *dummy data* loaders (manage.py command or fixtures) that pre-populate:
+#     – 6 sectors  →  water, health, schools, electricity, transport, security  
+#     – 30 projects as per table below, each with:  
+#           id, name, sector, district, start_date, end_date_plan, 
+#           status (ON_TRACK, AT_RISK, DELAYED, COMPLETE), 
+#           budget_allocated, budget_spent,
+#           kpi_target, kpi_achieved (numeric), 
+#           last_update, latitude, longitude
+#     – 10 districts (strings), 5 contractors, 50 citizen feedback records
+# --------------------------------------------------------------
+# 2⃣  Domain Schema (models.py)
+# --------------------------------------------------------------
+#  class Sector        (name, icon)  
+#  class District      (name, lat, lng)  
+#  class Project       (sector FK, district FK, …fields above…)  
+#  class Contractor    (name, rating)  
+#  class Procurement   (project FK, tender_id, amount, award_date, boqs_url)  
+#  class KPIHistory    (project FK, date, kpi_achieved)  
+#  class Feedback      (project FK, citizen_name, rating, comment, timestamp)  
+#  class UserProfile   (user FK, role_enum)               # Admin/Dept/District/Public
+# --------------------------------------------------------------
+# 3⃣  REST API End-points (urls.py / views.py)
+# --------------------------------------------------------------
+#  • /api/projects/               CRUD + list filters (sector, district, status)  
+#  • /api/projects/<id>/kpi/      GET timeline of KPIHistory  
+#  • /api/finance/summary/        Total allocated vs spent per sector & district  
+#  • /api/feedback/               POST citizen feedback (public, no auth)  
+#  • /api/auth/login/             JWT or Session based  
+# --------------------------------------------------------------
+# 4⃣  Front-End Pages (simple Django templates will do)
+# --------------------------------------------------------------
+#  a) Home Dashboard  
+#       – Cards: total projects, % complete, % delayed  
+#       – Mini-KPIs per sector  
+#  b) Interactive Map  
+#       – Leaflet or Google Maps; markers colour-coded by status  
+#       – Popup shows project name, progress bar, budget vs spent  
+#  c) Project Detail  
+#       – Timeline (Gantt style divs), KPIHistory chart (Chart.js)  
+#  d) Procurement & Contracts Page  
+#       – Table of tenders, cost overruns flagged red  
+#  e) Feedback Page (+ form)  
+# --------------------------------------------------------------
+# 5⃣  Dummy Data Table (seed content)
+# --------------------------------------------------------------
+#  | id | Sector      | Project                                | Start | Plan End | Budget (PKR bn) | Quick Description |
+#  |----|-------------|----------------------------------------|-------|----------|-----------------|-------------------|
+#  | 1  | water       | Canal lining – Lahore, Faisalabad       | 2025-01-15 | 2027-03-30 | 15 | 25 % water loss cut… |
+#  | 2  | health      | Sehat Card THQ Expansion – Multan       | 2025-03-01 | 2026-03-01 | 10 | Free maternity care… |
+#  | 3  | schools     | Digitize 500 schools – Rawalpindi       | 2025-06-01 | 2027-06-01 | 8  | Tablets + smart boards… |
+#  | …  | …           | … (fill out remaining 27 rows)          | …     | …        | …               | …                 |
+# --------------------------------------------------------------
+# 6⃣  Monitoring Features to Implement
+# --------------------------------------------------------------
+#  ✅ Real-time status badges  (green/yellow/red)  
+#  ✅ Budget burn-down bar + % spent  
+#  ✅ KPI progress pie or bar  
+#  ✅ District and sector filters  
+#  ✅ CSV/PDF export of project list  
+#  ✅ Role-based access (public sees read-only summaries)  
+#  ✅ Automated “predict delay” flag when kpi_achieved < 60 % and >50 % duration elapsed
+# --------------------------------------------------------------
+# 7⃣  Nice-to-Have (stretch goals)
+# --------------------------------------------------------------
+#  • WebSockets channel for live updates (Django Channels)  
+#  • Simple mobile-responsive Tailwind layout  
+#  • Management command to randomly update KPIHistory every hour for demo
+# --------------------------------------------------------------
+# Deliverables
+# --------------------------------------------------------------
+#  1. Full Django project zip or repo link  
+#  2. README with setup (python-3.11 -m venv, pip install -r requirements.txt, python manage.py migrate, python manage.py loaddata dummy.json, runserver)  
+#  3. Postman collection or Swagger docs auto-generated
+# --------------------------------------------------------------
+# NOTE
+# --------------------------------------------------------------
+#  • Use only open-source libraries  
+#  • Keep code clean, commented, PEP-8 compliant  
+#  • Provide at least 5 unit tests per app  
+#  • Assume deployment on Ubuntu 22.04 + gunicorn + nginx
+# --------------------------------------------------------------
