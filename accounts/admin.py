@@ -62,6 +62,5 @@ class UserProfileAdmin(admin.ModelAdmin):
     )
 
 
-# Unregister the default User admin and register our custom one
-admin.site.unregister(User)
+# Register our custom User admin
 admin.site.register(User, UserAdmin)
