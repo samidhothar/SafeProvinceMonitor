@@ -56,12 +56,12 @@ class Command(BaseCommand):
                 first_name='System',
                 last_name='Administrator'
             )
-            UserProfile.objects.create(
-                user=user,
-                role='ADMIN',
-                department='IT Department',
-                is_verified=True
-            )
+            # Update the profile created by signals
+            profile = user.profile
+            profile.role = 'ADMIN'
+            profile.department = 'IT Department'
+            profile.is_verified = True
+            profile.save()
             self.stdout.write('Created admin user: admin/admin123')
     
     def create_sectors(self):
