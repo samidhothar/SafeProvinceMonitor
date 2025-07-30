@@ -95,34 +95,6 @@ The system uses a relational model with the following key entities:
 - **Leaflet.js**: Interactive mapping functionality
 - **Bootstrap Icons**: Icon library
 
-### Development Tools
-- **Replit Environment**: PostgreSQL 16 and Python 3.11
-- **UV Package Manager**: Dependency management
-- **Django Management Commands**: Data loading and maintenance
-
-## Deployment Strategy
-
-### Environment Configuration
-- Environment-based settings for database and security
-- Debug mode controlled via environment variables
-- Static file serving configured for production
-- Media file handling for user uploads
-
-### Database Setup
-- Automated migrations on deployment
-- Dummy data loading through management commands
-- KPI update simulations for demonstration
-
-### Production Considerations
-- Secret key management through environment variables
-- CORS configuration for API access
-- Static file collection and serving
-- Database connection pooling ready
-
-## User Preferences
-
-Preferred communication style: Simple, everyday language.
-
 ## Changelog
 
 Changelog:
